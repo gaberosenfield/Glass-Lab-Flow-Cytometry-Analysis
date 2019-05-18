@@ -1,11 +1,19 @@
 % This is the script Pedro Goncalves used to analyze flow cytometry data
 % in his 2019 paper.  It requires the export_fig functions from the matlab
-% file exchange if you want to output example figures.
+% file exchange if you want to output example figures.  Special thanks to
+% Professor Marcus Roper at UCLA for helping me write this script.  
+% Written by Gabriel Rosenfield in 2019.  BSD-3 license & non-standard 
+% MATLAB R2018b Update 2 (9.5.0.1033004) dependencies available in GitHub
+% repository: https://github.com/gaberosenfield/Glass-Lab-Flow-Cytometry-Analysis
+% DOI: 10.5281/zenodo.2949953
 function FC_analysis_Goncalves(makehistplots)
 % This script removes ungerminated conidia from the matched germinated samples in FCS data.
 % It then uses Otsu's method to automatically gate the fluorescence data for each sample independently.
 % Finally, it corrects the percentage of highly fluorescent cells based on exponential decay fitting of data
 % above the fluorescence gate.
+
+% The optional "makehistplots" argument controls whether simple fluorescence histogram plots will be generated.
+% It will be evaluated as a boolean.
 close all;
 
 % Set Control Variables below
@@ -14,13 +22,7 @@ makeFigs = false; % change this variable to true to output gating example figure
 figLoc = '/Users/Gabe/Dropbox/UC Berkeley/Glass Lab/Literature/My Stuff/Goncalves et al 2019/Figures/'; %change this variable to the directory path into which you want example figures to be saved
 
 % Validate input
-if nargin
-    if makehistplots % this argument controls whether plots will be generated.
-        makehistplots = true;
-    else
-        makehistplots = false;
-    end
-else
+if ~nargin
     makehistplots = false; % do not make histogram plots by default.
 end
 
