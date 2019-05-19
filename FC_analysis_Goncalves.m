@@ -12,14 +12,21 @@ function FC_analysis_Goncalves(makehistplots)
 % Finally, it corrects the percentage of highly fluorescent cells based on exponential decay fitting of data
 % above the fluorescence gate.
 
+% .fcs file names should be in the following formats:
+%  Single strain files: <not underscores>_<strain name>_<not underscores>.fcs
+% Ungerminated files: <not underscores>_<strain name> C_<not underscores>.fcs
+% Mixed strain files: <not underscores>_<strain name 1> x <strain name 2>_<not underscores>.fcs
+% See examples files in the "Goncalves Example Inputs and Outputs" folder
+% in the GitHub repository.
+
 % The optional "makehistplots" argument controls whether simple fluorescence histogram plots will be generated.
 % It will be evaluated as a boolean.
 close all;
 
 % Set Control Variables below
 conPrctile = 95; % this variable controls the forward scatter area threshold that differentiates conidia from germlings
-makeFigs = false; % change this variable to true to output gating example figures
-figLoc = '/Users/Gabe/Dropbox/UC Berkeley/Glass Lab/Literature/My Stuff/Goncalves et al 2019/Figures/'; %change this variable to the directory path into which you want example figures to be saved
+makeFigs = true; % change this variable to true to output gating example figures
+figLoc = ''; %change this variable to the directory path into which you want example figures to be saved, if diffierent from the current directory
 
 % Validate input
 if ~nargin
@@ -70,13 +77,13 @@ for iconidia = 1:N_conidia
     conidiafiles_sts{iconidia,2} = FSCthres;
     
     if makeFigs % separately record the conidial FSCA data, SSCA data, & gate from 2489 & S9S
-        if contains(conidiafiles_sts{iconidia,1},'2489 C_')
+        if contains(conidiafiles_sts{iconidia,1},'FGSC2489 C_')
             c2489FSCA = conidiadat(:,1);
             c2489SSCA = conidiadat(:,3);
             FSCthresWT = FSCthres;
             conidia_SSC_sort = sort(conidiadat(:,3),'descend');
             SSCthres2489 = conidia_SSC_sort(round(N_events*(1-conPrctile/100)));
-        elseif contains(conidiafiles_sts{iconidia,1},'S9S C_')
+        elseif contains(conidiafiles_sts{iconidia,1},'sec9swap C_')
             cS9SFSCA = conidiadat(:,1);
             FSCthresS9S = FSCthres;
         end
@@ -108,7 +115,7 @@ for istrain = 1:N_strain
     end
 
     % The if statement below generates figures demonstrating the conidial gating method used in this program
-    if makeFigs && strcmp(strain_st,'2489')
+    if makeFigs && strcmp(strain_st,'FGSC2489')
         [wtDat,~] = fca_readfcs(strainfiles_sts{istrain});
         wtFSCA = wtDat(:,1);
         germFSCA = wtFSCA(wtFSCA>FSCthresWT);
@@ -201,7 +208,7 @@ for icross = 1:N_crosses
     end
     
     % The if statement below generates figures demonstrating the conidial gating method used in this program
-    if makeFigs && strcmp(strain1_st,'2489') && strcmp(strain2_st,'S9S')
+    if makeFigs && strcmp(strain1_st,'FGSC2489') && strcmp(strain2_st,'sec9swap')
         [mixDat,~] = fca_readfcs(crossfiles_sts{icross});
         mixFSCA = mixDat(:,1);
         germMixFSCA = mixFSCA(mixFSCA>FSCthres);
@@ -316,7 +323,7 @@ if makehistplots % print simple figures of each fluorescence gate to the working
     hold on;
     axis manual;
     yl = ylim;
-    title([plotTit ' - SB']);
+    title({[plotTit ' - SB'],[num2str(100*(N_deadbySB/N_events)*errscore_SB,2) '% dead by SB']});
     plot(SBthres(end)*[1 1],[yl(1) yl(2)],'k');
     plot(newSBthres*[1 1],[yl(1) yl(2)],'g');
     xlabel('Natural Log of Sytox Blue Fluorescence (arbitrary units)');
@@ -331,7 +338,7 @@ if makehistplots % print simple figures of each fluorescence gate to the working
     hold on;
     axis manual;
     yl = ylim;
-    title([plotTit ' - PI']);
+    title({[plotTit ' - PI'],[num2str(100*(N_deadbyPI/N_events)*errscore_PI,2) '% dead by PI']});
     plot(PIthres(end)*[1 1],[yl(1) yl(2)],'k');
     plot(newPIthres*[1 1],[yl(1) yl(2)],'g');
     xlabel('Natural Log of Propidium Iodide Fluorescence (arbitrary units)');
@@ -341,7 +348,7 @@ if makehistplots % print simple figures of each fluorescence gate to the working
     close all;   
 end
 
-if makeFigs && strcmp(strain1_st,'2489')
+if makeFigs && strcmp(strain1_st,'FGSC2489')
     if isempty(strain2_st)
         plotTit = strain1_st;
         saveTit = plotTit;
@@ -379,7 +386,7 @@ if makeFigs && strcmp(strain1_st,'2489')
     histogram(logfusion_SB(logfusion_SB>newSBthres),'BinEdges',sbh.BinEdges,'DisplayStyle','stairs','LineWidth',1,'EdgeColor',[0.4940 0.1840 0.5560]);
     xlabel('Natural Log of Sytox Blue Fluorescence (arbitrary units)','FontSize',15);
     ylabel('Counts','FontSize',15);
-    lg = legend({['FGSC' otherTit ' SB, n = ' num2str(N_events)],'Initial SB gate',['Exponential decay fit of data above initial gate, R^{2} = ' ...
+    lg = legend({[otherTit ' SB, n = ' num2str(N_events)],'Initial SB gate',['Exponential decay fit of data above initial gate, R^{2} = ' ...
         num2str(1-errscore_SB,2)],'Corrected SB gate', ...
         [num2str(errscore_SB*100*N_deadbySB/N_events,2) '% of FGSC' otherTit ' above corrected SB gate']});
     lg.Location = 'northeast';
@@ -389,9 +396,9 @@ if makeFigs && strcmp(strain1_st,'2489')
     title({['Sytox Blue Gating Example: FGSC' plotTit ' SB Histogram\rm'], ...
         [num2str(errscore_SB*100*N_deadbySB/N_events,2) '% of FGSC' otherTit ' dead by SB']},'FontSize',15);
     figD.Color = [1 1 1];
-    export_fig(figD,[figLoc 'FGSC' saveTit ' SB Gating'],'-png','-jpg');
-    print(figD,'-dpdf',[figLoc 'FGSC' saveTit ' SB Gating']);
-    print(figD,'-dsvg',[figLoc 'FGSC' saveTit ' SB Gating']);
+    export_fig(figD,[figLoc saveTit ' SB Gating'],'-png','-jpg');
+    print(figD,'-dpdf',[figLoc saveTit ' SB Gating']);
+    print(figD,'-dsvg',[figLoc saveTit ' SB Gating']);
     close all;
     
     figE = figure('Units','inches','Position',[0 0 8.5 8.5]); % Generate figure showing PI gating
@@ -405,7 +412,7 @@ if makeFigs && strcmp(strain1_st,'2489')
     histogram(logfusion_PI(logfusion_PI>newPIthres),'BinEdges',pih.BinEdges,'DisplayStyle','stairs','LineWidth',1,'EdgeColor',[0.4940 0.1840 0.5560]);
     xlabel('Natural Log of Propidium Iodide Fluorescence (arbitrary units)','FontSize',15);
     ylabel('Counts','FontSize',15);
-    lg = legend({['FGSC' otherTit ' PI, n = ' num2str(N_events)],'Initial PI gate',['Exponential decay fit of data above initial gate, R^{2} = ' ...
+    lg = legend({[otherTit ' PI, n = ' num2str(N_events)],'Initial PI gate',['Exponential decay fit of data above initial gate, R^{2} = ' ...
         num2str(1-errscore_PI,2)],'Corrected PI gate', ...
         [num2str(errscore_PI*100*N_deadbyPI/N_events,2) '% of FGSC' otherTit ' above corrected PI gate']});
     lg.Location = 'northwest';
@@ -415,9 +422,9 @@ if makeFigs && strcmp(strain1_st,'2489')
     title({['Propidium Iodide Gating Example: FGSC' plotTit ' PI Histogram\rm'], ...
         [num2str(errscore_PI*100*N_deadbyPI/N_events,2) '% of FGSC' otherTit ' dead by PI']},'FontSize',15);
     figE.Color = [1 1 1];
-    export_fig(figE,[figLoc 'FGSC' saveTit ' PI Gating'],'-png','-jpg');
-    print(figE,'-dpdf',[figLoc 'FGSC' saveTit ' PI Gating']);
-    print(figE,'-dsvg',[figLoc 'FGSC' saveTit ' PI Gating']);
+    export_fig(figE,[figLoc saveTit ' PI Gating'],'-png','-jpg');
+    print(figE,'-dpdf',[figLoc saveTit ' PI Gating']);
+    print(figE,'-dsvg',[figLoc saveTit ' PI Gating']);
     close all;
 end
 return;

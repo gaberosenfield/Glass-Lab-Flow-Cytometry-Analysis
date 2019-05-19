@@ -1,0 +1,4 @@
+Strain 1,Strain 2,# germinated,SB threshold,PI threshold,# dead by SB,# dead by PI,# dead by both,% dead by SB,% dead by PI,% dead by both,SB error score,PI error score,corrected % dead by SB,corrected % dead by PI,
+FGSC2489,,18171,7.1535,7.9393,4650,3057,2646,25.5902,16.8235,14.5617,0.1338,0.0713,3.4250,1.2000,
+sec9swap,,7411,7.9211,9.0661,2780,1571,1504,37.5118,21.1982,20.2942,0.1234,0.2696,4.6290,5.7159,
+FGSC2489,sec9swap,13082,8.0974,9.1439,6179,4160,4009,47.2328,31.7994,30.6452,0.6298,0.8954,29.7493,28.4736,
